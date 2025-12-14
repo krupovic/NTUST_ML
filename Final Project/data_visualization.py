@@ -142,6 +142,32 @@ def plot_destinations_map(train, sample_size=50000):
     print("Saved destinations_map.png")
     plt.close()
 
+def plot_missing_rate_table(df, filename="missing_rate_table.png"):
+    """Draw a table summarizing column-wise missing value percentages."""
+    missing_pct = df.isna().mean().mul(100).sort_values(ascending=False)
+    summary = pd.DataFrame({
+        "column": missing_pct.index,
+        "missing_pct": missing_pct.values
+    })
+
+    fig_height = max(2.5, len(summary) * 0.35 + 1.0)
+    fig, ax = plt.subplots(figsize=(10, fig_height))
+    ax.axis('off')
+    table = ax.table(
+        cellText=[[name, f"{pct:.2f}%"] for name, pct in zip(summary['column'], summary['missing_pct'])],
+        colLabels=["Column", "Missing %"],
+        cellLoc='center',
+        loc='center'
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1, 1.4)
+    ax.set_title("Missing Value Percentage by Column", pad=20)
+    fig.tight_layout()
+    fig.savefig(filename, bbox_inches='tight')
+    print(f"Saved {filename}")
+    plt.close(fig)
+
 def plot_correlation_heatmap(df, filename="correlation_heatmap.png"):
     """Plots a correlation heatmap for numeric features in the DataFrame."""
     # Select only numeric columns

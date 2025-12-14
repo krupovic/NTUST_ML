@@ -31,63 +31,8 @@ def encode_call_type(df):
     encoder_df = pd.DataFrame(encoder.fit_transform(df[['CALL_TYPE']]).toarray())
     df = df.join(encoder_df)
     df.rename(columns={0:'call_type_a', 1:'call_type_b',2:'call_type_c'}, inplace=True)
-    return df
-
-def extract_first_last_coords(df):
-    # 1st lon
-    lists_1st_lon = []
-    for i in range(len(df["POLYLINE"])):
-        if df["POLYLINE"][i] == '[]':
-            k=0
-            lists_1st_lon.append(k)
-        else:
-            k = re.sub(r"[[|[|]|]|]]", "", str(df["POLYLINE"][i])).split(",")[0]
-            lists_1st_lon.append(k)
-    df["lon_1st"] = lists_1st_lon
-
-    # 1st lat
-    lists_1st_lat = []
-    for i in range(len(df["POLYLINE"])):
-        if df["POLYLINE"][i] == '[]':
-            k=0
-            lists_1st_lat.append(k)
-        else:
-            k = re.sub(r"[[|[|]|]|]]", "", str(df["POLYLINE"][i])).split(",")[1]
-            lists_1st_lat.append(k)
-    df["lat_1st"] = lists_1st_lat
-
-    # last lon
-    lists_last_lon = []
-    for i in range(len(df["POLYLINE"])):
-        if df["POLYLINE"][i] == '[]':
-            k=0
-            lists_last_lon.append(k)
-        else:
-            k = re.sub(r"[[|[|]|]|]]", "", str(df["POLYLINE"][i])).split(",")[-2]
-            lists_last_lon.append(k)
-    df["lon_last"] = lists_last_lon
-
-    # last lat
-    lists_last_lat = []
-    for i in range(len(df["POLYLINE"])):
-        if df["POLYLINE"][i] == '[]':
-            k=0
-            lists_last_lat.append(k)
-        else:
-            k = re.sub(r"[[|[|]|]|]]", "", str(df["POLYLINE"][i])).split(",")[-1]
-            lists_last_lat.append(k)
-    df["lat_last"] = lists_last_lat
-    return df
-
-def clean_and_cast(df):
-    df = df.query("lon_last != 0")
-    df["lon_1st"] = [float(k) for k in df["lon_1st"]]
-    df["lat_1st"] = [float(k) for k in df["lat_1st"]]
-    df["lon_last"] = [float(k) for k in df["lon_last"]]
-    df["lat_last"] = [float(k) for k in df["lat_last"]]
-    df['call_type_a']= [int(k) for k in df["call_type_a"]]
-    df['call_type_b'] =[int(k) for k in df["call_type_b"]]
-    df['call_type_c']= [int(k) for k in df["call_type_c"]]
+    for col in ['call_type_a', 'call_type_b', 'call_type_c']:
+        df[col] = df[col].astype(int)
     return df
 
 def main():
@@ -116,22 +61,17 @@ def main():
     print("# ENCODING CALL TYPE FOR TEST DATA")
     final_test = encode_call_type(test)
 
-    print("# EXTRACTING 1st/LAST LATITUDE/LONGITUDE FOR TRAINING DATA")
-    final_train = extract_first_last_coords(final_train)
-    print("# EXTRACTING 1st/LAST LATITUDE/LONGITUDE FOR TESTING DATA")
-    final_test = extract_first_last_coords(final_test)
+    # Drop high-missing origin identifiers no longer needed for modeling
+    drop_cols = ["ORIGIN_CALL", "ORIGIN_STAND"]
+    final_train = final_train.drop(columns=drop_cols, errors="ignore")
+    final_test = final_test.drop(columns=drop_cols, errors="ignore")
 
-    print("# DELETE LON & LAT HAVE '0' IN TRAINING DATA")
-    train = clean_and_cast(final_train)
-    print("# DELETE LON & LAT HAVE '0' IN TESTING DATA")
-    test = clean_and_cast(final_test)
-
-    print("Final train shape:", train.shape)
-    print("Final test shape:", test.shape)
+    print("Final train shape:", final_train.shape)
+    print("Final test shape:", final_test.shape)
 
     # Save processed tables with clear names
-    train.to_csv("train_processed.csv", index=False)
-    test.to_csv("test_processed.csv", index=False)
+    final_train.to_csv("train_processed.csv", index=False)
+    final_test.to_csv("test_processed.csv", index=False)
 
 if __name__ == "__main__":
     main()

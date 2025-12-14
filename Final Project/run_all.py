@@ -17,6 +17,7 @@ from data_visualization import (
     plot_start_locations,
     plot_trajectories_sample,
     plot_destinations_map,
+    plot_missing_rate_table,
     plot_correlation_heatmap
 )
 from data_preparation import main as prepare_data
@@ -31,6 +32,7 @@ def main(cut_len: int = 10) -> None:
     plot_start_locations(train.copy())
     plot_trajectories_sample(train.copy())
     plot_destinations_map(train.copy())
+    plot_missing_rate_table(train.copy())
     # X is not available in new workflow, skip correlation heatmap
 
     print("[2/2] Preparing processed data files...")
@@ -40,6 +42,8 @@ def main(cut_len: int = 10) -> None:
     # Correlation study for processed training data
     print("[Post] Correlation study for processed training data...")
     processed_train = pd.read_csv("train_processed.csv")
+    print("[Post] Rendering missing value table for processed training data...")
+    # plot_missing_rate_table(processed_train)
     plot_correlation_heatmap(processed_train)
 
 
